@@ -69,7 +69,7 @@ class Transaction(Meta):
 
     @property
     def total_cost(self):
-        return self.books.cost
+        return sum((float(book.cost) for book in self.books))
 
     @classmethod
     def create_transaction(cls, customer_id, books: list):
@@ -79,7 +79,6 @@ class Transaction(Meta):
             trans = cls(transaction_hash, customer_id, books)
             db.session.add(trans)
             db.session.commit()
-            trans = trans.get()
         return trans
 
 
@@ -115,6 +114,15 @@ class Books(Meta):
     @property
     def category(self):
         return self.category_desc.name
+
+    @classmethod
+    def add_book(cls, ISBN, category, cost):
+        category = Category.query.filter(Category.name == category).first_or_404()
+        book = cls(ISBN, category.id, cost)
+        db.session.add(book)
+        db.session.commit()
+        # return book.get()
+
 
 if __name__ == "__main__":
     from sqlalchemy import create_engine

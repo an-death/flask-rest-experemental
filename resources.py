@@ -1,7 +1,7 @@
 from flask_restful import Resource, fields, marshal_with, abort
 
 from app import db
-from models.models import Customer, Transaction, Books
+from models.models import Customer, Transaction, Books, Category
 from parsers import get_parsers
 
 book_fields = {
@@ -23,10 +23,10 @@ calculate_fields = {
 transaction_fields = {
     'hash_id': fields.String,
     'total_cost': fields.String,
-    'books': fields.String
+    # 'books': fields.String
 }
 
-book_parser, calculate_parser = get_parsers()
+book_parser, calculate_parser, book_creater = get_parsers()
 
 
 class BookDescription(Resource):
@@ -34,7 +34,7 @@ class BookDescription(Resource):
     def get(self, id):
         book = Books.query.get(id)
         if not book:
-            abort(404, message=f"Book with ISBN <{id}> not found")
+            abort(404, message=f"Book with id <{id}> not found")
         return book
 
     @marshal_with(book_fields)
@@ -51,18 +51,19 @@ class BooksList(Resource):
         args = book_parser.parse_args()
         query = Books.query
         if args['category']:
-            query = query.filter(category=args['category'])
+            query = query.filter_by(category_id=Category.query.filter_by(name='comix').first().id)
         if args['cost_from']:
             query = query.filter(Books.cost >= args['cost_from'])
         if args['cost_to']:
             query = query.filter(Books.cost <= args['cost_to'])
         if args['cost']:
-            query = query.filter(cost=args['cost'])
+            query = query.filter(Books.cost == args['cost'])
         return query.all()
 
-    def post(self, ISBN, category, cost):
-        pass  # todo add when its need
-
+    def post(self):
+        args = book_creater.parse_args()
+        Books.add_book(ISBN=args['ISBN'], category=args['category'], cost=args['cost'])
+        return 201
 
 class Calculate(Resource):
     # todo add calculation get and put method's for customize
@@ -78,7 +79,7 @@ class Calculate(Resource):
             db.session.commit()
         for book in args['books']:
             book = Books.query.get(book)
-            assert book, abort(404, message=f"Book with ISBN <{book}> not found")
+            assert book, abort(404, message=f"Book with Id <{book}> not found")
             books.append(book)
 
         trans = Transaction.create_transaction(customer_id=user.id, books=books)
