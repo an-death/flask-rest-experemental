@@ -3,7 +3,6 @@ from datetime import datetime
 from os import urandom
 
 from sqlalchemy.orm import validates
-from sqlalchemy_utils.types import CurrencyType  # , PhoneNumber
 
 from app import db
 
@@ -56,6 +55,7 @@ class Transaction(Meta):
     transaction_hash = db.Column(db.Text, unique=True, primary_key=True)
     customer_id = db.Column(db.Integer, db.ForeignKey(Customer.id))
     date = db.Column(db.DateTime)
+    hash_id = db.synonym('transaction_hash')
 
     books = db.relationship('Books', secondary=books_transactions, back_populates='transactions')
 
@@ -67,12 +67,19 @@ class Transaction(Meta):
             assert isinstance(book, Books)
             self.books.append(book)
 
+    @property
+    def total_cost(self):
+        return self.books.cost
+
     @classmethod
     def create_transaction(cls, customer_id, books: list):
-        books = [Books.query.filter(Books.ISBN == ISBN).first_or_404() for ISBN in books if ISBN]
         transaction_hash = hashlib.md5((''.join(str(b.id) for b in books)).encode()).hexdigest()
-
-        trans = cls(transaction_hash, customer_id, books)
+        trans = cls.query.get(transaction_hash)
+        if not trans:
+            trans = cls(transaction_hash, customer_id, books)
+            db.session.add(trans)
+            db.session.commit()
+            trans = trans.get()
         return trans
 
 
@@ -82,7 +89,7 @@ class Category(Meta):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(200), unique=True)
 
-    books = db.relationship('Books', backref=db.backref('category'))
+    books = db.relationship('Books', backref=db.backref('category_desc'))
 
     def __init__(self, name):
         self.name = name
@@ -94,7 +101,7 @@ class Books(Meta):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     ISBN = db.Column(db.String(13), unique=True)  # todo add validation
     category_id = db.Column(db.Integer, db.ForeignKey(Category.id))
-    cost = db.Column(CurrencyType)  # todo upgrade filed to sqla_utils.types.currency
+    cost = db.Column(db.Float)  # todo upgrade filed to sqla_utils.types.currency
     description = db.Column(db.Text(300), default=urandom(200))
 
     transactions = db.relationship('Transaction', secondary=books_transactions, back_populates='books')
@@ -105,6 +112,9 @@ class Books(Meta):
         self.cost = cost
         self.description = description
 
+    @property
+    def category(self):
+        return self.category_desc.name
 
 if __name__ == "__main__":
     from sqlalchemy import create_engine

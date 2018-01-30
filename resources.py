@@ -5,10 +5,14 @@ from models.models import Customer, Transaction, Books
 from parsers import get_parsers
 
 book_fields = {
+    'id': fields.Integer,
     'ISBN': fields.String,
     'category': fields.String,
-    'cost': fields.Float
+    'cost': fields.String
 }
+
+book_fields_desc = book_fields.copy()
+book_fields_desc['description'] = fields.String
 
 calculate_fields = {
     'books': fields.List,
@@ -16,27 +20,28 @@ calculate_fields = {
     'email': fields.String,
     'phone': fields.String(attribute='phone_number')
 }
-transaction_fileds = {
-    'transaction': fields.String,
-    'uri': fields.Url('transaction', endpoint='transaction', absolute=True, scheme='http')
+transaction_fields = {
+    'hash_id': fields.String,
+    'total_cost': fields.String,
+    'books': fields.String
 }
 
 book_parser, calculate_parser = get_parsers()
 
 
 class BookDescription(Resource):
-    @marshal_with(book_fields)
-    def get(self, ISBN):
-        book = Books.query.fiter(ISBN=ISBN).first_or_404()
+    @marshal_with(book_fields_desc)
+    def get(self, id):
+        book = Books.query.get(id)
         if not book:
-            abort(404, message="Book with ISBN {} not found".format(ISBN))
+            abort(404, message=f"Book with ISBN <{id}> not found")
         return book
 
     @marshal_with(book_fields)
-    def put(self, ISBN):
+    def put(self, id):
         pass  # todo add if needed
 
-    def delete(self, ISBN):
+    def delete(self, id):
         pass  # todo add if needed
 
 
@@ -55,26 +60,35 @@ class BooksList(Resource):
             query = query.filter(cost=args['cost'])
         return query.all()
 
-    def post(self):
+    def post(self, ISBN, category, cost):
         pass  # todo add when its need
 
 
 class Calculate(Resource):
     # todo add calculation get and put method's for customize
+    @marshal_with(transaction_fields)
     def post(self):
+        books = []
         args = calculate_parser.parse_args()
-        user = Customer.query.filter(Customer.email == args['email']).one()
+        user = Customer.query.filter(Customer.email == args['email']).first()
+
         if not user:
             user = Customer(name=args['name'], email=args['email'], phone_number=args['phone'])
             db.session.add(user)
             db.session.commit()
-        trans = Transaction.create_transaction(customer_id=user.id, books=args['books'])
-        db.session.add(trans)
-        db.session.commit(trans)
+        for book in args['books']:
+            book = Books.query.get(book)
+            assert book, abort(404, message=f"Book with ISBN <{book}> not found")
+            books.append(book)
+
+        trans = Transaction.create_transaction(customer_id=user.id, books=books)
         return trans, 201
 
 
 class TransResult(Resource):
-    @marshal_with(transaction_fileds)
-    def get(self, hash):
-        return Transaction.get_or_404(hash)
+    @marshal_with(transaction_fields)
+    def get(self, hash_id):
+        trans = Transaction.query.get(hash_id)
+        if not trans:
+            abort(404, message=f"Transaction with hash <{hash_id}> not found")
+        return trans
