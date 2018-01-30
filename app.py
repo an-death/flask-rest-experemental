@@ -8,12 +8,13 @@ from werkzeug.routing import BaseConverter
 from config import Dev, Ops
 
 app = Flask(__name__)
-if os.environ.get('LOCATION') == "Dev":
-    app.secret_key = Dev.SECRET_KEY
-    app.config.from_object(Dev)
-else:
+if os.environ.get('LOCATION') == "OPS":
     app.secret_key = Ops.SECRET_KEY
     app.config.from_object(Ops)
+else:
+    app.secret_key = Dev.SECRET_KEY
+    app.config.from_object(Dev)
+
 
 if not app.debug:
     import logging
@@ -41,8 +42,3 @@ class RegexConverter(BaseConverter):
 
 app.url_map.converters['regex'] = RegexConverter
 
-##
-## Import Resorces
-##
-api.add_resource(TodoListResource, '/todos', endpoint='todos')
-api.add_resource(TodoResource, '/todos/<string:id>', endpoint='todo')
