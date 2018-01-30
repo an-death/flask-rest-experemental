@@ -1,6 +1,7 @@
 import os
 
 from flask import Flask
+from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.routing import BaseConverter
 
@@ -30,7 +31,7 @@ if not app.debug:
     log.addHandler(file_handler)
 
 db = SQLAlchemy(app)
-
+api = Api(app=app, catch_all_404s=True)
 
 class RegexConverter(BaseConverter):
     def __init__(self, url_map, *items):
@@ -39,3 +40,9 @@ class RegexConverter(BaseConverter):
 
 
 app.url_map.converters['regex'] = RegexConverter
+
+##
+## Import Resorces
+##
+api.add_resource(TodoListResource, '/todos', endpoint='todos')
+api.add_resource(TodoResource, '/todos/<string:id>', endpoint='todo')

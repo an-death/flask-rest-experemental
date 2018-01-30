@@ -17,6 +17,8 @@ class Dev(Configuration):
     SQLALCHEMY_DATABASE_URI = database.Dev.SQLALCHEMY_DATABASE_URI
     SQLALCHEMY_ECHO = True
     SQLALCHEMY_BINDS = database.Dev.SQLALCHEMY_BINDS
+    SERVER_HOST = 'localhost'
+    SERVER_PORT = 8001
 
 
 class Ops(Configuration):

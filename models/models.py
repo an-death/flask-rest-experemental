@@ -1,6 +1,7 @@
 from os import urandom
 
 from sqlalchemy.orm import validates
+from sqlalchemy_utils.types import CurrencyType  # , PhoneNumber
 
 from app import db
 
@@ -47,7 +48,10 @@ class Transaction(Meta):
     __tablename__ = 'transaction'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    transaction_hash = db.Column(db.Text, unique=True)
     customer_id = db.Column(db.Integer, db.ForeignKey(Customer.id))
+    date = db.Column(db.DateTime)
+    purchase_cost = db.Column(CurrencyType)
     books = db.relationship('Books', secondary=books_transactions, back_populates='transactions')
 
 
@@ -66,6 +70,7 @@ class Books(Meta):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     ISBN = db.Column(db.String(13), unique=True)  # todo add validation
     category_id = db.Column(db.Integer, db.ForeignKey(Category.id))
+    cost = db.Column(CurrencyType)  # todo upgrade filed to sqla_utils.types.currency
     description = db.Column(db.Text(300), default=urandom(200))
 
     transactions = db.relationship('Transaction', secondary=books_transactions, back_populates='books')
