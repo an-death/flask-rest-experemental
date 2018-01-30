@@ -42,3 +42,9 @@ class RegexConverter(BaseConverter):
 
 app.url_map.converters['regex'] = RegexConverter
 
+from resources import BooksList, BookDescription, Calculate, TransResult
+
+api.add_resource(BookDescription, '/books/<id>', endpoint='book')
+api.add_resource(BooksList, '/books', endpoint='books')
+api.add_resource(Calculate, '/calculate', endpoint='calculate')
+api.add_resource(TransResult, '/transaction/<hash_id>')
