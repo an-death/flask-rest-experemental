@@ -5,6 +5,7 @@ trying to write rest-api om flask
 books:
 
 `curl -X GET http://url/books`
+
 parameters:
     [category, cost, cost_from, cost_to]
 
@@ -13,21 +14,19 @@ add book:
 `curl -X POST http://url/books 
   -H 'content-type: application/json' \
   -d '{"ISBN": "Python", "category":"For Coders", "cost":"500"}'`
-  
-del word: 
-
-`curl -X DELETE http://example.com/api/words/{id} -H 'authorization: Token $TOKEN'` 
+  parameters:
+  [ISBN, category, cost]
 
 
-vacancies:
+calculate:
 
-`curl -X GET http://127.0.0.1:5000/api/words/{id}/vacancies/ -H 'authorization: Token $TOKEN'`
+`curl -X POST http://url/calculate`
 
 parameters: 
-    [date__gte, date__lte, date__gt, date__lt, page] 
+    [name, email, phone, books:list] 
     
-    date_format must be : "YYYY-MM-DD"
-    
-For start celery background task use:
+transaction:
 
-`celery -A django_rest worker -l DEBUG --pool=solo -B &`
+`curl -X POST http://url/transsaction/<hash>`
+
+hash = transaction 
