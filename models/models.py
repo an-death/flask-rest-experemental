@@ -56,13 +56,15 @@ class Transaction(Meta):
     customer_id = db.Column(db.Integer, db.ForeignKey(Customer.id))
     date = db.Column(db.DateTime)
     hash_id = db.synonym('transaction_hash')
+    currency_id = db.Column(db.Integer, db.ForeignKey('currency.id'))
 
     books = db.relationship('Books', secondary=books_transactions, back_populates='transactions')
 
-    def __init__(self, transaction_hash, customer_id, books: list):
+    def __init__(self, transaction_hash, customer_id, currency_id, books: list):
         self.transaction_hash = transaction_hash
         self.customer_id = customer_id
         self.date = datetime.now()
+        self.currency = currency_id
         for book in books:
             assert isinstance(book, Books)
             self.books.append(book)
@@ -73,14 +75,18 @@ class Transaction(Meta):
 
     @property
     def currency(self):
-        return self.books[-1].currency_id
+        return self.currency_id
+
+    @currency.setter
+    def currency(self, currency_id):
+        self.currency_id = currency_id
 
     @classmethod
-    def create_transaction(cls, customer_id, books: list):
+    def create_transaction(cls, customer_id, currency_id, books: list):
         transaction_hash = hashlib.md5((''.join(str(b.id) for b in books)).encode()).hexdigest()
         trans = cls.query.get(transaction_hash)
         if not trans:
-            trans = cls(transaction_hash, customer_id, books)
+            trans = cls(transaction_hash, customer_id, currency_id, books)
             db.session.add(trans)
             db.session.commit()
         return trans

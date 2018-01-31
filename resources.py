@@ -24,6 +24,7 @@ calculate_fields = {
 }
 transaction_fields = {
     'hash_id': fields.String,
+    'date': fields.DateTime,
     'total_cost': fields.String,
     'currency': fields.Integer(attribute='currency_id')
     # 'books': fields.String
@@ -85,8 +86,8 @@ class Calculate(Resource):
             book = Books.query.get(book)
             assert book, abort(404, message=f"Book with Id <{book}> not found")
             books.append(book)
-
-        trans = Transaction.create_transaction(customer_id=user.id, books=books)
+        currency_id = book.currency_id
+        trans = Transaction.create_transaction(customer_id=user.id, currency_id=currency_id, books=books)
         return trans, 201
 
 
