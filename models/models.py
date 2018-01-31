@@ -69,7 +69,11 @@ class Transaction(Meta):
 
     @property
     def total_cost(self):
-        return sum((float(book.cost) for book in self.books))
+        return round(sum((book.cost for book in self.books)), 2)
+
+    @property
+    def currency(self):
+        return self.books[-1].currency_id
 
     @classmethod
     def create_transaction(cls, customer_id, books: list):
@@ -102,14 +106,16 @@ class Books(Meta):
     category_id = db.Column(db.Integer, db.ForeignKey(Category.id))
     cost = db.Column(db.Float)  # todo upgrade filed to sqla_utils.types.currency
     description = db.Column(db.Text(300), default=urandom(200))
+    currency_id = db.Column(db.Integer, db.ForeignKey('currency.id'))
 
     transactions = db.relationship('Transaction', secondary=books_transactions, back_populates='books')
 
-    def __init__(self, ISBN, category_id, cost, description=None):
+    def __init__(self, ISBN, category_id, cost, currency_id, description=None):
         self.ISBN = ISBN
         self.category_id = category_id
         self.cost = cost
         self.description = description
+        self.currency_id = currency_id
 
     @property
     def category(self):
@@ -124,6 +130,20 @@ class Books(Meta):
         # return book.get()
 
 
+class Currency(Meta):
+    __tablename__ = 'currency'
+
+    # todo add specofic currency logic
+    id = db.Column(db.Integer, primary_key=True)
+    currency_code = db.Column(db.Integer, default=urandom(5))  # some specific currency code
+    currency_name = db.Column(db.String(5))
+    currency_desc = db.Column(db.String(10))
+
+    def __init__(self, name, desc, code=None):
+        self.currency_code = code
+        self.currency_name = name
+        self.currency_desc = desc
+
 if __name__ == "__main__":
     from sqlalchemy import create_engine
     from database import Dev
@@ -132,9 +152,12 @@ if __name__ == "__main__":
     db.metadata.bind = engine
     db.drop_all(engine)
     db.create_all(engine)
-    book = Books(ISBN='01-0101-0111', category_id=1, cost=500)
+    book = Books(ISBN='01-0101-0111', category_id=1, cost=500, currency_id=1)
     horrors = Category(name='horrors')
     business = Category(name='business')
-    book2 = Books(ISBN='01-0101-0110', category_id=2, cost=200.2)
-    db.session.add_all([horrors, business, book, book2])
+    comix = Category(name='comix')
+    book2 = Books(ISBN='01-0101-0110', category_id=2, cost=200.2, currency_id=1)
+    book3 = Books(ISBN='01-0101-0119', category_id=3, cost=3000.2, currency_id=1)
+    rub = Currency('rub', 'Рубли')
+    db.session.add_all([horrors, business, book, book2, rub, comix, book3])
     db.session.commit()
