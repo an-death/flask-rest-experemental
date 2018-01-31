@@ -46,5 +46,5 @@ from resources import BooksList, BookDescription, Calculate, TransResult
 
 api.add_resource(BookDescription, '/books/<id>', endpoint='book')
 api.add_resource(BooksList, '/books', endpoint='books')
-api.add_resource(Calculate, '/calculate', endpoint='calculate')
+api.add_resource(Calculate, '/calculation', endpoint='calculation')
 api.add_resource(TransResult, '/transaction/<hash_id>')

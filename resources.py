@@ -1,3 +1,4 @@
+from flask import request
 from flask_restful import Resource, fields, marshal_with, abort
 
 from app import db
@@ -8,7 +9,8 @@ book_fields = {
     'id': fields.Integer,
     'ISBN': fields.String,
     'category': fields.String,
-    'cost': fields.String
+    'cost': fields.String,
+    'currency': fields.Integer(attribute='currency_id')
 }
 
 book_fields_desc = book_fields.copy()
@@ -23,6 +25,7 @@ calculate_fields = {
 transaction_fields = {
     'hash_id': fields.String,
     'total_cost': fields.String,
+    'currency': fields.Integer(attribute='currency_id')
     # 'books': fields.String
 }
 
@@ -71,13 +74,14 @@ class Calculate(Resource):
     def post(self):
         books = []
         args = calculate_parser.parse_args()
+        req = request.json['books']
         user = Customer.query.filter(Customer.email == args['email']).first()
 
         if not user:
             user = Customer(name=args['name'], email=args['email'], phone_number=args['phone'])
             db.session.add(user)
             db.session.commit()
-        for book in args['books']:
+        for book in req:
             book = Books.query.get(book)
             assert book, abort(404, message=f"Book with Id <{book}> not found")
             books.append(book)

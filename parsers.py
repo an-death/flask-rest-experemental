@@ -10,7 +10,7 @@ def get_parsers():
     parsers['calculate_parser'].add_argument('name', type=str, required=True, help=default_help_string.format('name'))
     parsers['calculate_parser'].add_argument('email', type=str, required=True, help=default_help_string.format('email'))
     parsers['calculate_parser'].add_argument('phone', type=str, required=True, help=default_help_string.format('phone'))
-    parsers['calculate_parser'].add_argument('books', type=list, required=True,
+    parsers['calculate_parser'].add_argument('books', type=list, required=True,  # todo bug - doesnt type=list work
                                              help=default_help_string.format('books'))
 
     parsers['book_parser'].add_argument('category', type=str)
