@@ -1,5 +1,5 @@
 # flask-rest-experemental
-trying to write rest-api om flask
+trying to write rest-api om flask with python 3.6
 
 
 books:
