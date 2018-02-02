@@ -22,5 +22,7 @@ def get_parsers():
     parsers['book_creater'].add_argument('category', type=str, required=True)
     parsers['book_creater'].add_argument('ISBN', type=str, required=True)
     parsers['book_creater'].add_argument('cost', type=float, required=True)
+    parsers['book_creater'].add_argument('currency_id', type=int, required=True)
+
 
     return parsers['book_parser'], parsers['calculate_parser'], parsers['book_creater']

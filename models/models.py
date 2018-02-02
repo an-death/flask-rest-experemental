@@ -128,9 +128,9 @@ class Books(Meta):
         return self.category_desc.name
 
     @classmethod
-    def add_book(cls, ISBN, category, cost):
+    def add_book(cls, ISBN, category, cost, currency_id):
         category = Category.query.filter(Category.name == category).first_or_404()
-        book = cls(ISBN, category.id, cost)
+        book = cls(ISBN, category.id, cost, currency_id)
         db.session.add(book)
         db.session.commit()
         # return book.get()

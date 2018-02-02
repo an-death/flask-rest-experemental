@@ -9,7 +9,7 @@ book_fields = {
     'id': fields.Integer,
     'ISBN': fields.String,
     'category': fields.String,
-    'cost': fields.String,
+    'cost': fields.Float,
     'currency': fields.Integer(attribute='currency_id')
 }
 
@@ -25,7 +25,7 @@ calculate_fields = {
 transaction_fields = {
     'hash_id': fields.String,
     'date': fields.DateTime,
-    'total_cost': fields.String,
+    'total_cost': fields.Float,
     'currency': fields.Integer(attribute='currency_id')
     # 'books': fields.String
 }
@@ -55,7 +55,7 @@ class BooksList(Resource):
         args = book_parser.parse_args()
         query = Books.query
         if args['category']:
-            query = query.filter_by(category_id=Category.query.filter_by(name='comix').first().id)
+            query = query.filter_by(category_id=Category.query.filter_by(name=args['category']).first().id)
         if args['cost_from']:
             query = query.filter(Books.cost >= args['cost_from'])
         if args['cost_to']:
@@ -66,7 +66,7 @@ class BooksList(Resource):
 
     def post(self):
         args = book_creater.parse_args()
-        Books.add_book(ISBN=args['ISBN'], category=args['category'], cost=args['cost'])
+        Books.add_book(ISBN=args['ISBN'], category=args['category'], cost=args['cost'], currency_id=args['currency_id'])
         return 201
 
 class Calculate(Resource):
